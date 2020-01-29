@@ -6,13 +6,15 @@ import p5 from './p5.min.js'
 const river = s => {
 	let backgroundColor = s.color('white')
 
+	let riverPadding = 200
+
 	let riverSpeed = 50 // pixels per second
 	let riverWidthDesired = 400
-	let riverHeight = 1580
-	let riverVarianceX = 30
-	let riverVarianceY = 10
+	let riverHeight = s.windowHeight + riverPadding * 2
+	let riverVarianceX = 15
+	let riverVarianceY = 5
 	let riverColor = s.color('black')
-	let pointsCount = 15
+	let pointsCount = Math.ceil((15 / 1080) * riverHeight)
 
 	// ===========================================================
 	let riverWidth
@@ -26,7 +28,7 @@ const river = s => {
 	let pointsLeft = []
 	let pointsRight = []
 
-	const segLength = s.windowHeight / pointsCount
+	const segLength = riverHeight / pointsCount
 
 	const addNewPoints = () => {
 		const r = n => Math.random() * n * 2 - n
@@ -40,9 +42,11 @@ const river = s => {
 
 	const trimPoints = (originX, originY) => {
 		const trimTime = arr => {
-			return arr[0].y < -riverVarianceY - riverHeight - segLength
+			return arr[0].y < -riverVarianceY - riverPadding - originY - segLength
 		}
 		if (trimTime(pointsLeft) || trimTime(pointsRight)) {
+			console.log(pointsLeft[0].y)
+			console.log(-riverVarianceY - riverHeight - segLength)
 			pointsLeft.shift()
 			pointsRight.shift()
 			addNewPoints()
@@ -64,7 +68,7 @@ const river = s => {
 	const refreshRiver = () => {
 		pointsLeft = []
 		pointsRight = []
-		for (let i = 1; i < pointsCount; i++) {
+		for (let i = 0; i < pointsCount; i++) {
 			flowRiver((riverHeight + riverVarianceY * 2) / pointsCount)
 			addNewPoints()
 		}
@@ -78,14 +82,15 @@ const river = s => {
 		canvas.parent('river')
 		refreshRiver()
 		s.smooth()
+		console.log(s.windowHeight)
 	}
 
 	s.draw = () => {
 		if (s.focused) {
 			s.background(backgroundColor)
 
-			const riverOriginX = s.windowWidth / 2
-			const riverOriginY = s.windowHeight + riverVarianceY * 2 + segLength * 4
+			const riverOriginX = s.width / 2
+			const riverOriginY = s.height + riverVarianceY * 2 + segLength * 4
 
 			s.fill('red')
 			s.circle(riverOriginX, riverOriginY, 30)
@@ -134,11 +139,17 @@ const river = s => {
 			s.pop()
 			animateRiver()
 			trimPoints(riverOriginX, riverOriginY)
+
+			// s.push()
+			// s.color('red')
+			// s.circle(0, s.height, 100)
+			// s.pop()
 		}
 	}
 	s.windowResized = () => {
 		s.resizeCanvas(s.windowWidth, s.windowHeight)
 		calculateRiverWidth()
+		refreshRiver()
 	}
 }
 export default river
